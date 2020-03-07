@@ -20,7 +20,7 @@
   </head>
   <body>
     
-    <div id="canvas-holder" style="width:40%">
+    <div id="canvas-holder" style="width:100%">
       <canvas id="chart-area"></canvas>
     </div>
 
@@ -30,88 +30,63 @@
     <script src="utils.js"></script>
     <script>
 
-      var socket = io();
+var socket = io();
 
 
-      var config = {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [
-              7,
-              7,
-              7,
-              7,
-              7,
-            ],
-            backgroundColor: [
-            '#ff00ff',
-            '#888800',
-            '#880088',
-            '#333333',
-            '#111111',
-            ],
-            label: 'Dataset 1'
-          }],
-          
-          labels: [
-            'Red',
-            'Orange',
-            'Yellow',
-            'Green',
-            'Blue'
-          ]
-        },
-        options: {
-          responsive: true,
-          legend: {
-            position: 'top',
-          },
-          title: {
-            display: true,
-            text: 'Chart.js Doughnut Chart'
-          },
-          animation: {
-            animateScale: true,
-            animateRotate: true
-          }
-        }
-      };
+var ctx = document.getElementById('chart-area').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+    labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
+    datasets: [{ 
+        data: [1,2,3,4,5,6,7,8,9,10],
+        label: "Africa",
+        borderColor: "#3e95cd",
+        cubicInterpolation: 'default',
+        fill: false
+      },
+      { 
+        data: [1,2,3,4,5,6,7,8,9,10],
+        label: "Not Africa",
+        borderColor: "#ff00cd",
+        fill: false
+    }
+    ]
+  },
+  options: {
+    animation: {
+      easing: 'easeInOutSine',
+      duration: 0
+    },
+    title: {
+      display: true,
+      text: 'World population per region (in millions)'
+    }
+  }
+});
 
-      alert('Beyond config.');
 
-      
-        
-      var ctx = document.getElementById('chart-area').getContext('2d');
-      var myDoughnut = new Chart(ctx, config);
 
-      var data = myDoughnut.data.datasets[0].data[0];
-      
 
-      var someValues = [4,5,6];
+
+
+var someValues = [4,5,6,7,8];
+
+
+socket.on('update', (arr) => {
+    myChart.data.datasets[0].data = arr;
+    myChart.update();
+});
+
+
+
+    </script>
 
       
-
-      socket.emit('add', data);
-
-      socket.on('update', (arr) => {
-          var data = [];
-          var x;
-
-          alert(String(arr.reg));
-
-
-
-          myDoughnut.data.datasets[0].data = data;
-
-          
-          myDoughnut.update();
-          
-      });
 
       
      
       
-    </script>
+    
   </body>
 </html>

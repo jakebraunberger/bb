@@ -6,7 +6,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 
 let db = new sqlite3.Database('./modbusReg.db');
-let sql = `SELECT REG10 from REG order by time asc limit 10`;
+let sql = `SELECT REG10 from REG order by time asc limit 5`;
 
 
 // initially get the data
@@ -29,7 +29,7 @@ app.get('/', function(req, res){
 
 const chartArray = [];
 
-sql = `SELECT REG10 from REG order by time desc limit 5`;
+sql = `SELECT REG10 from REG order by time desc limit 10`;
 
 io.on('connection', (socket) => {
 	
@@ -40,6 +40,11 @@ io.on('connection', (socket) => {
     	console.log(vals);
     })
 
+    socket.on('debug', (doughnut_data) => {
+    	console.log('Data from client:\n');
+    	console.log(doughnut_data.toString());
+    })
+
     setInterval(function() {
         var r = [];
         
@@ -47,18 +52,22 @@ io.on('connection', (socket) => {
 			if (err) {
 				throw err;
 			}
-			r = rows;
-			
-		});
-		r.forEach((datum) => {
-			console.log(datum);
-		})
-        socket.emit('update', r);
 
-    }, 10000);
+			rows.forEach((datum) => {
+				
+				r.push(datum.REG10);
+				
+			})
+
+		socket.emit('update', r);	
+		});
+		
+        console.log('Update.\n');
+
+    }, 1000);
 });
 
 
-http.listen(3000, function(){
-	console.log('listening on *:3000');
+http.listen(8080, function(){
+	console.log('listening on *:8080');
 });
