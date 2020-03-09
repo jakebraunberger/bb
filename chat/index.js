@@ -3,12 +3,29 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var express = require('express');
 const sqlite3 = require('sqlite3').verbose();
+const passport = require('passport');
+
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 
 app.use(express.static(__dirname));
+app.use(session({
+	store: new RedisStore({
+		url: config.redisStore.url
+	}),
+	secret: config.redisStore.secret,
+	resave: false,
+	saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+
+
 
 let db = new sqlite3.Database('./display.db');
+let db_error = new sqlite3.Database('./errorlogs.db')
 let sql = `SELECT * from DISPLAY order by time asc limit 1`;
-
+let sql_error = `SELECT * from ERRORLOGS order by time asc limit 1`;
 
 // initially get the data
 var r = [];
@@ -125,9 +142,39 @@ io.on('connection', (socket) => {
 		socket.emit('update', out);	
 		});
 		
+		
         console.log('Update.\n');
 
     }, 5000);
+
+
+    // Error logs
+    setInterval(function() {
+        var r = [];
+        var out = {};
+        
+        db_error.all(sql_error, [], (err, rows) => {
+			if (err) {
+				throw err;
+			}
+
+			r = rows[0];
+			console.log(r);
+
+		out = {
+        	time: r.TIME,
+        	error_name: r.ERRORNAME,
+        	error_val: r.ERRVALL
+      	}
+
+		socket.emit('update_error', out);	
+		});
+		
+		
+        console.log('Update.\n');
+
+    }, 3000);
+    
 });
 
 

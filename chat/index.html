@@ -358,6 +358,8 @@
                 }
               }
     */
+
+    // Update the Status
     socket.on('update', (arr) => {
 
           // Status
@@ -438,59 +440,51 @@
           // MCC Others
           // either a table or charts
 
-          // Need to send error logs
-          // Error Log
-          error_table_ref = document.getElementById('error-table');
-          var new_row = error_table_ref.insertRow();
-          // Cell 0
-          var new_cell = new_row.insertCell(0);
-          var new_text = document.createTextNode('12:00 PM');
-          new_cell.appendChild(new_text);
+          
 
-          // Cell 1
-          new_cell = new_row.insertCell(1);
-          new_text = document.createTextNode('Some err');
-          new_cell.appendChild(new_text);
-
-          // Cell 2
-          new_cell = new_row.insertCell(2);
-          new_text = document.createTextNode('Some errval');
-          new_cell.appendChild(new_text);
-
-
-
-          // NEW ROW
-          // var new_row = status_table_ref.insertRow();
-          // // new row, column one
-          // var new_cell = new_row.insertCell(0);
-          // var new_text = document.createTextNode('New row');
-          // new_cell.appendChild(new_text);
-          // // new row, column two
-          // new_cell = new_row.insertCell(1);
-          // new_text = document.createTextNode('New row');
-          // new_cell.appendChild(new_text);
-          // // new row, column three
-          // new_cell = new_row.insertCell(2);
-          // new_text = document.createTextNode('New row');
-          // new_cell.appendChild(new_text);
       });
     
 
 
-    // Status
+      // Update the error log
+      /* 
 
-    // Voltages
+      arr = {
+        time: t,
+        error_name: err_n,
+        error_val: err_val
+      }
 
-    // Currents
+      */
+      socket.on('update_error', (arr) => {
+          // Need to send error logs
+          // Error Log
+          var error_table_ref = document.getElementById('error-table');
 
-    // Battery
+          // Need to determine whether or not it is an update.
+          var lastRow = error_table_ref.rows.length-1;
+          var prevTime = error_table_ref.rows[lastRow].cells[0].innerHTML;
+          var currTime = arr.time;
+          if (!(currTime == prevTime))
+          {
+            var new_row = error_table_ref.insertRow();
+            // Cell 0
+            var new_cell = new_row.insertCell(0);
+            var new_text = document.createTextNode(arr.time);
+            new_cell.appendChild(new_text);
 
-    // CC
+            // Cell 1
+            new_cell = new_row.insertCell(1);
+            new_text = document.createTextNode(arr.err_name);
+            new_cell.appendChild(new_text);
 
-    // Jam Sequence
+            // Cell 2
+            new_cell = new_row.insertCell(2);
+            new_text = document.createTextNode(arr.error_val);
+            new_cell.appendChild(new_text);
+          }
 
-    // MCC
-
+      });
     
 
 
