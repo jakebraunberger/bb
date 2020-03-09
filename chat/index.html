@@ -24,59 +24,65 @@
       <canvas id="chart-area"></canvas>
     </div>
 
+    
+
+
+
+
+    <!-- Script section -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
     <script src="utils.js"></script>
     <script>
 
-var socket = io();
+    var socket = io();
 
 
-var ctx = document.getElementById('chart-area').getContext('2d');
-var myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-    labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
-    datasets: [{ 
-        data: [1,2,3,4,5,6,7,8,9,10],
-        label: "Africa",
-        borderColor: "#3e95cd",
-        cubicInterpolation: 'default',
-        fill: false
+    var ctx = document.getElementById('chart-area').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+        labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
+        datasets: [{ 
+            data: [1,2,3,4,5,6,7,8,9,10],
+            label: "Africa",
+            borderColor: "#3e95cd",
+            cubicInterpolation: 'default',
+            fill: false
+          },
+          { 
+            data: [1,2,3,4,5,6,7,8,9,10],
+            label: "Not Africa",
+            borderColor: "#ff00cd",
+            fill: false
+        }
+        ]
       },
-      { 
-        data: [1,2,3,4,5,6,7,8,9,10],
-        label: "Not Africa",
-        borderColor: "#ff00cd",
-        fill: false
-    }
-    ]
-  },
-  options: {
-    animation: {
-      easing: 'easeInOutSine',
-      duration: 0
-    },
-    title: {
-      display: true,
-      text: 'World population per region (in millions)'
-    }
-  }
-});
+      options: {
+        animation: {
+          easing: 'easeInOutSine',
+          duration: 0
+        },
+        title: {
+          display: true,
+          text: 'World population per region (in millions)'
+        }
+      }
+    });
 
 
 
 
 
 
-var someValues = [4,5,6,7,8];
+      var someValues = [4,5,6,7,8];
 
 
-socket.on('update', (arr) => {
-    myChart.data.datasets[0].data = arr;
-    myChart.update();
-});
+      socket.on('update', (arr) => {
+          myChart.data.datasets[0].data = arr;
+          myChart.update();
+      });
 
 
 
