@@ -1,28 +1,150 @@
 <!doctype html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-      canvas {
-      -moz-user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
+
+
+
+
   <body>
     
-    <div id="canvas-holder" style="width:100%">
-      <canvas id="chart-area"></canvas>
+    <!-- Tab links -->
+    <div class="tab">
+      <button class="tablinks" onclick="openTab(event, 'Status')">Status</button>
+      <button class="tablinks" onclick="openTab(event, 'Voltages')">Voltages</button>
+      <button class="tablinks" onclick="openTab(event, 'Currents')">Currents</button>
+      <button class="tablinks" onclick="openTab(event, 'Battery')">Battery</button>
+      <button class="tablinks" onclick="openTab(event, 'CC')">CC</button>
+      <button class="tablinks" onclick="openTab(event, 'Jam Sequence')">Jam Sequence</button>
+      <button class="tablinks" onclick="openTab(event, 'MCC')">MCC</button>
+      <button class="tablinks" onclick="openTab(event, 'Error Log')">Error Log</button>
     </div>
+
+
+
+
+    <!-- Tab content -->
+    <!-- Status -->
+    <div id="Status" class="tabcontent">
+      <table id="status-table" class="table">
+        <thead>
+          <tr> 
+            <th> Value </th>
+            <th> Description </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id='status-table-value'> 0 </td>
+            <td id='status-table-value-desc'> Some description. </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Voltages -->
+    <div id="Voltages" class="tabcontent" style="width:100%">
+      <canvas id="chart-voltages"></canvas>
+    </div>
+
+    <!-- Currents -->
+    <div id="Currents" class="tabcontent" style="width:100%">
+      <canvas id="chart-currents"></canvas>
+    </div>
+
+    <!-- Battery -->
+    <div id="Battery" class="tabcontent" style="width: 100%">
+      <table id="battery-table" class="table">
+        <thead>
+          <tr> 
+            <th> Daily AhC </th>
+            <th> Daily AhL </th>
+            <th> Charge (kWh) </th>
+            <th> Daily Vb Min </th>
+            <th> Charge State </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id='td_daily_ahc'> 0.0 </td>
+            <td id='td_daily_ahl'> 1.0 </td>
+            <td id='td_charge_kwh'> 2.0 </td>
+            <td id='td_daily_vb_min'> 3.0 </td>
+            <td id='td_charge_state'> 4.0 </td>
+          </tr>
+        </tbody>
+        <!-- todo: set on in Node.js, Socket.io -->
+      </table>
+    </div>
+
+    <!-- CC -->
+    <div id="CC" class="tabcontent" style="width:100%">
+      <table id="cc-table" class="table">
+        <tr>
+          <th> CC LED State </th>
+          <th> CC Load State </th>
+        </tr>
+        
+        <tr>
+          <td id='td_cc_led_state'> CC LED State </td>
+          <td id='td_cc_load_state'> CC Load State </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Jam Sequence -->
+    <div id="Jam Sequence" class="tabcontent" style="width:100%">
+      <table class="table">
+        <tr>
+          <th> Jam Sequence </th>
+        </tr>
+        <tr>
+          <td id='td_jam_sequence'> Jam Sequence </td>
+        </tr>
+        <!-- todo: set on in Node.js, Socket.io -->
+      </table>
+    </div>
+
+    <!-- MCC -->
+    <div id="MCC" class="tabcontent" style="width:100%">
+      <table class="table">
+        <tr>
+          <th> MCC SN </th>
+        </tr>
+        <tr>
+          <td id='td_mcc_sn'>123456</td>
+        </tr>
+        <!-- todo: set on in Node.js, Socket.io -->
+      </table>
+      <!-- RPM, voltage, current, temp -->
+      <canvas id="chart-mcc-rpm"></canvas>
+      <canvas id="chart-mcc-voltage"></canvas>
+      <canvas id="chart-mcc-current"></canvas>
+      <canvas id="chart-mcc-temp"></canvas>
+    </div>
+
+    <!-- Error Log -->
+    <div id="Error Log" class="tabcontent" style="width:100%">
+      <table id="error-table" class="table">
+        <tr>
+          <th> Time </th>
+          <th> Error Name </th>
+          <th> Error Value </th>
+        </tr>
+        
+        <!-- todo: set on in Node.js, Socket.io -->
+      </table>
+      <!-- RPM, voltage, current, temp -->
+      <canvas id="chart-mcc-rpm"></canvas>
+      <canvas id="chart-mcc-voltage"></canvas>
+      <canvas id="chart-mcc-current"></canvas>
+      <canvas id="chart-mcc-temp"></canvas>
+    </div>
+
+    
 
     
 
@@ -34,26 +156,114 @@
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
     <script src="utils.js"></script>
+
+    <!-- Tab things -->
     <script>
+      function openTab(evt, cityName) {
+        // Declare all variables
+        var i, tabcontent, tablinks;
 
-    var socket = io();
+        // Get all elements with class="tabcontent" and hide them
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
 
+        // Get all elements with class="tablinks" and remove the class "active"
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
 
-    var ctx = document.getElementById('chart-area').getContext('2d');
-    var myChart = new Chart(ctx, {
+        // Show the current tab, and add an "active" class to the button that opened the tab
+        document.getElementById(cityName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+    </script>
+
+    <!-- Functions -->
+    <script>
+    function statusFromInt(i) {
+      var strOut = '';
+      if (i & 2**0) {
+        strOut += 'System is in an Antijam sequence.\n';
+      }
+      if (i & 2**1) {
+        strOut += 'Running, MCC 36 VDC out of range.\n';
+      }
+      if (i & 2**2) {
+        strOut += 'MCC not communicating with the BB.\n';
+      }
+      if (i & 2**3) {
+        strOut += 'CC not communicating with the BB.\n';
+      }
+      if (i & 2**4) {
+        strOut += 'Battery voltage below 11.8 VDC.\n';
+      }
+      if (i & 2**5) {
+        strOut += 'Motor stop due to numerous antijam sequences.\n';
+      }
+      if (i & 2**6) {
+        strOut += 'MCC drive status is greater than 32, see Table 1.\n';
+      }
+      if (i & 2**7) {
+        strOut += '';
+      }
+      if (i & 2**8) {
+        strOut += '';
+      }
+      if (i & 2**9) {
+        strOut += 'CC is in a LVD state.\n';
+      }
+      if (i & 2**10) {
+        strOut += '';
+      }
+      if (i & 2**11) {
+        strOut += 'CC array fault. See CC documents.\n';
+      }
+      if (i & 2**12) {
+        strOut += 'CC load fault. See CC documents.\n';
+      }
+      if (i & 2**13) {
+        strOut += 'CC Alarm Hi. See CC documents.\n';
+      }
+      if (i & 2**14) {
+        strOut += 'CC Alarm Low. See CC documents.\n';
+      }
+      if (i & 2**15) {
+        strOut += 'CC LED error. See CC documents.\n';
+      }
+      return strOut;
+    }
+  </script>
+
+    <!-- Dynamic things -->
+    <script>
+    // Get the status in human readable form
+    
+
+    // Chart Voltages
+    var ctx_voltages = document.getElementById('chart-voltages').getContext('2d');
+    var myChartVoltages = new Chart(ctx_voltages, {
         type: 'line',
         data: {
         labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
         datasets: [{ 
-            data: [1,2,3,4,5,6,7,8,9,10],
-            label: "Africa",
+            data: [0,2,3,4,5,6,7,8,9,10],
+            label: "Battery Voltage",
             borderColor: "#3e95cd",
             cubicInterpolation: 'default',
             fill: false
           },
           { 
             data: [1,2,3,4,5,6,7,8,9,10],
-            label: "Not Africa",
+            label: "Array Voltage",
+            borderColor: "#ff00cd",
+            fill: false
+        },
+          { 
+            data: [1,2,3,4,5,6,7,8,9,10],
+            label: "Load Voltage",
             borderColor: "#ff00cd",
             fill: false
         }
@@ -66,23 +276,230 @@
         },
         title: {
           display: true,
-          text: 'World population per region (in millions)'
+          text: 'Voltages'
         }
       }
     });
 
+    // Chart Currents
+    var ctx_currents = document.getElementById('chart-currents').getContext('2d');
+    var myChartCurrents = new Chart(ctx_currents, {
+        type: 'line',
+        data: {
+        labels: [1500,1600,1700,1750,1800,1850,1900,1950,1999,2050],
+        datasets: [{ 
+            data: [0,2,3,4,5,6,7,8,9,10],
+            label: "Charge Current",
+            borderColor: "#3e95cd",
+            cubicInterpolation: 'default',
+            fill: false
+          },
+          { 
+            data: [1,2,3,4,5,6,7,8,9,10],
+            label: "Load Current",
+            borderColor: "#ff00cd",
+            fill: false
+        }
+        ]
+      },
+      options: {
+        animation: {
+          easing: 'easeInOutSine',
+          duration: 0
+        },
+        title: {
+          display: true,
+          text: 'Voltages'
+        }
+      }
+    });
+
+    // Socket.io
+    var socket = io();
+    
+    // Array should be javascript {} object
+    /* like the following:
+            arr = 
+              {
+                status: {
+                  value: val
+                },
+                voltages: {
+                  battery_voltage: batt_volt,
+                  array_voltage: arr_volt,
+                  load_voltage: l_volt,
+                },
+                currents: {
+                  charge_current: c_c,
+                  load_current: l_c,
+                },
+                battery: {
+                  charge_w: c_w,
+                  daily_ahc: d_ahc,
+                  daily_ahl: d_ahl,
+                  charge_kwh: c_kwh,
+                  daily_vb_min: d_vb_min,
+                  charge_state: c_s,          
+                },
+                cc: {
+                  cc_led_state: cc_l_s,
+                  cc_load_state: cc_load_state,
+                },
+                jam_sequence: {
+                  jam_sequence: j_s,
+                },
+                mcc: {
+                  mcc_sn: mcc_sn,
+                  mcc_rpm: mcc_rpm,
+                  mcc_status: mcc_status,
+                  mcc_voltage: mcc_v,
+                  mcc_current: mcc_c,
+                  mcc_temp: mcc_temp,
+                }
+              }
+    */
+    socket.on('update', (arr) => {
+
+          // Status
+          var status_table_value_ref = document.getElementById('status-table-value');
+          status_table_value_ref.innerHTML = arr.status.value;
+          var status_table_value_desc_ref = document.getElementById('status-table-value-desc');
+          var desc = statusFromInt(arr.status.value);
+          status_table_value_desc_ref.innerHTML = desc;
 
 
 
 
 
-      var someValues = [4,5,6,7,8];
+          // Voltages
+          // var dt = 1;
+          // myChartVoltages.labels.push(1);
+          myChartVoltages.data.datasets[0].data.push(arr.voltages.battery_voltage);
+          myChartVoltages.data.datasets[1].data.push(arr.voltages.arr_volt);
+          myChartVoltages.data.datasets[2].data.push(arr.voltages.l_volt);
+          myChartVoltages.update();
 
 
-      socket.on('update', (arr) => {
-          myChart.data.datasets[0].data = arr;
-          myChart.update();
+
+
+          // Currents
+          // var dt = 1;
+          // myChartCurrents.labels.push(1);
+          myChartCurrents.data.datasets[0].data.push(arr.currents.charge_current);
+          myChartCurrents.data.datasets[1].data.push(arr.currents.load_current);
+          myChartCurrents.update();
+
+
+
+
+          // Battery
+          var battery_daily_ahc_ref = document.getElementById('td_daily_ahc');
+          var battery_daily_ahl_ref = document.getElementById('td_daily_ahl');
+          var battery_charge_kwh_ref = document.getElementById('td_charge_kwh');
+          var battery_daily_vb_min_ref = document.getElementById('td_daily_vb_min');
+          var battery_charge_state_ref = document.getElementById('td_charge_state');
+
+          // update
+          battery_daily_ahc_ref.innerHTML = arr.battery.daily_ahc;
+          battery_daily_ahl_ref.innerHTML = arr.battery.daily_ahl;
+          battery_charge_kwh_ref.innerHTML = arr.battery.charge_kwh;
+          battery_daily_vb_min_ref.innerHTML = arr.battery.daily_vb_min;
+          battery_charge_state_ref.innerHTML = arr.battery.charge_state;
+
+
+
+
+          // CC
+          var cc_led_state_ref = document.getElementById('td_cc_led_state');
+          var cc_load_state_ref = document.getElementById('td_cc_load_state');
+
+          // update
+          cc_led_state_ref.innerHTML = arr.cc.cc_led_state;
+          cc_load_state_ref.innerHTML = arr.cc.cc_led_state;
+
+
+
+
+          // Jam Sequence
+          var jam_sequence_ref = document.getElementById('td_jam_sequence');
+
+          // update
+          jam_sequence_ref.innerHTML = arr.jam_sequence.jam_sequence;
+
+
+
+          // MCC SN
+          var mcc_sn_ref = document.getElementById('td_mcc_sn');
+
+          // update
+          mcc_sn_ref.innerHTML = arr.mcc.mcc_sn;
+
+
+          // MCC Others
+          // either a table or charts
+
+          // Need to send error logs
+          // Error Log
+          error_table_ref = document.getElementById('error-table');
+          var new_row = error_table_ref.insertRow();
+          // Cell 0
+          var new_cell = new_row.insertCell(0);
+          var new_text = document.createTextNode('12:00 PM');
+          new_cell.appendChild(new_text);
+
+          // Cell 1
+          new_cell = new_row.insertCell(1);
+          new_text = document.createTextNode('Some err');
+          new_cell.appendChild(new_text);
+
+          // Cell 2
+          new_cell = new_row.insertCell(2);
+          new_text = document.createTextNode('Some errval');
+          new_cell.appendChild(new_text);
+
+
+
+          // NEW ROW
+          // var new_row = status_table_ref.insertRow();
+          // // new row, column one
+          // var new_cell = new_row.insertCell(0);
+          // var new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
+          // // new row, column two
+          // new_cell = new_row.insertCell(1);
+          // new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
+          // // new row, column three
+          // new_cell = new_row.insertCell(2);
+          // new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
       });
+    
+
+
+    // Status
+
+    // Voltages
+
+    // Currents
+
+    // Battery
+
+    // CC
+
+    // Jam Sequence
+
+    // MCC
+
+    
+
+
+
+
+
+
+
+      
 
 
 

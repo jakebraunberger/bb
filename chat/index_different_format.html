@@ -1,0 +1,306 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+
+
+
+
+  <body>
+    
+    <!-- Tab links -->
+    <div class="tab">
+      <button class="tablinks" onclick="openTab(event, 'Status')">Status</button>
+      <button class="tablinks" onclick="openTab(event, 'Error Log')">Error Log</button>
+    </div>
+
+
+
+
+    <!-- Tab content -->
+    <!-- Status -->
+    <div id="Status" class="tabcontent" style="width:100%">
+      <table id="status-table" class="table">
+        <thead>
+          <tr> 
+            <th> Status </th>
+            <th> Battery Voltage </th>
+            <th> Array Voltage </th>
+            <th> Load Voltage </th>
+            <th> Charge Current </th>
+            <th> Load Current </th>
+            <th> Charge (W) </th>
+            <th> Daily AhC </th>
+            <th> Daily AhL </th>
+            <th> Charge (kWh) </th>
+            <th> Daily Vb Min </th>
+            <th> Charge State </th>
+            <th> CC LED State </th>
+            <th> CC Load State </th>
+            <th> Jam Sequence </th>
+            <th> MCC SN </th>
+            <th> MCC RPM </th>
+            <th> MCC Status </th>
+            <th> MCC Voltage </th>
+            <th> MCC Current </th>
+            <th> MCC Temp (Celsius) </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr> 
+            <td id='td_Status'> Status </td>
+            <td id='td_Battery_Voltage'> Battery Voltage </td>
+            <td id='td_Array_Voltage'> Array Voltage </td>
+            <td id='td_Load_Voltage'> Load Voltage </td>
+            <td id='td_Charge_Current'> Charge Current </td>
+            <td id='td_Load_Current'> Load Current </td>
+            <td id='td_Charge_W'> Charge (W) </td>
+            <td id='td_Daily_AhC'> Daily AhC </td>
+            <td id='td_Daily_AhL'> Daily AhL </td>
+            <td id='td_Charge_kWh'> Charge (kWh) </td>
+            <td id='td_Daily_Vb_Min'> Daily Vb Min </td>
+            <td id='td_Charge_State'> Charge State </td>
+            <td id='td_CC_LED_State'> CC LED State </td>
+            <td id='td_CC_Load_State'> CC Load State </td>
+            <td id='td_Jam_Sequence'> Jam Sequence </td>
+            <td id='td_MCC_SN'> MCC SN </td>
+            <td id='td_MCC_RPM'> MCC RPM </td>
+            <td id='td_MCC_Status'> MCC Status </td>
+            <td id='td_MCC_Voltage'> MCC Voltage </td>
+            <td id='td_MCC_Current'> MCC Current </td>
+            <td id='td_MCC_Temp_Celsius'> MCC Temp (Celsius) </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- Error Log -->
+    <div id="Error Log" class="tabcontent" style="width:100%">
+      <table id="error-table" class="table">
+        <tr>
+          <th> Time </th>
+          <th> Error Name </th>
+          <th> Error Value </th>
+        </tr>
+        
+        
+      </table>
+      
+    </div>
+
+    
+
+    
+
+
+
+
+    <!-- Script section -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <script src="utils.js"></script>
+
+    <!-- Tab things -->
+    <script>
+      function openTab(evt, cityName) {
+        // Declare all variables
+        var i, tabcontent, tablinks;
+
+        // Get all elements with class="tabcontent" and hide them
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = "none";
+        }
+
+        // Get all elements with class="tablinks" and remove the class "active"
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+
+        // Show the current tab, and add an "active" class to the button that opened the tab
+        document.getElementById(cityName).style.display = "block";
+        evt.currentTarget.className += " active";
+      }
+    </script>
+
+    
+    
+
+    <!-- Dynamic things -->
+    <script>
+    // Get the status in human readable form
+    
+
+    // Socket.io
+    var socket = io();
+    
+    // Array should be javascript {} object
+    /* like the following:
+            arr = 
+              {
+                status: {
+                  value: val
+                },
+                voltages: {
+                  battery_voltage: batt_volt,
+                  array_voltage: arr_volt,
+                  load_voltage: l_volt,
+                },
+                currents: {
+                  charge_current: c_c,
+                  load_current: l_c,
+                },
+                battery: {
+                  charge_w: c_w,
+                  daily_ahc: d_ahc,
+                  daily_ahl: d_ahl,
+                  charge_kwh: c_kwh,
+                  daily_vb_min: d_vb_min,
+                  charge_state: c_s,          
+                },
+                cc: {
+                  cc_led_state: cc_l_s,
+                  cc_load_state: cc_load_state,
+                },
+                jam_sequence: {
+                  jam_sequence: j_s,
+                },
+                mcc: {
+                  mcc_sn: mcc_sn,
+                  mcc_rpm: mcc_rpm,
+                  mcc_status: mcc_status,
+                  mcc_voltage: mcc_v,
+                  mcc_current: mcc_c,
+                  mcc_temp: mcc_temp,
+                }
+              }
+    */
+    socket.on('update', (arr) => {
+
+        // Status of everything except error log
+        var Status_ref = document.getElementById('td_Status');
+        var Battery_Voltage_ref = document.getElementById('td_Battery_Voltage');
+        var Array_Voltage_ref = document.getElementById('td_Array_Voltage');
+        var Load_Voltage_ref = document.getElementById('td_Load_Voltage');
+        var Charge_Current_ref = document.getElementById('td_Charge_Current');
+        var Load_Current_ref = document.getElementById('td_Load_Current');
+        var Charge_W_ref = document.getElementById('td_Charge_W');
+        var Daily_AhC_ref = document.getElementById('td_Daily_Ah');
+        var Daily_AhL_ref = document.getElementById('td_Daily_Ah');
+        var Charge_kWh_ref = document.getElementById('td_Charge_kWh');
+        var Daily_Vb_Min_ref = document.getElementById('td_Daily_Vb_Min');
+        var Charge_State_ref = document.getElementById('td_Charge_State');
+        var CC_LED_State_ref = document.getElementById('td_CC_LED_State');
+        var CC_Load_State_ref = document.getElementById('td_CC_Load_State');
+        var Jam_Sequence_ref = document.getElementById('td_Jam_Sequence');
+        var MCC_SN_ref = document.getElementById('td_MCC_SN');
+        var MCC_RPM_ref = document.getElementById('td_MCC_RPM');
+        var MCC_Status_ref = document.getElementById('td_MCC_Status');
+        var MCC_Voltage_ref = document.getElementById('td_MCC_Voltage');
+        var MCC_Current_ref = document.getElementById('td_MCC_Current');
+        var MCC_Temp_Celsius_ref = document.getElementById('td_MCC_Temp_Celsius');
+
+        // Update
+        Status_ref.innerHTML = arr[0]
+        Battery_Voltage_ref.innerHTML = arr[1]
+        Array_Voltage_ref.innerHTML = arr[2]
+        Load_Voltage_ref.innerHTML = arr[3]
+        Charge_Current_ref.innerHTML = arr[4]
+        Load_Current_ref.innerHTML = arr[5]
+        Charge_W_ref.innerHTML = arr[6]
+        Daily_AhC_ref.innerHTML = arr[7]
+        Daily_AhL_ref.innerHTML = arr[8]
+        Charge_kWh_ref.innerHTML = arr[9]
+        Daily_Vb_Min_ref.innerHTML = arr[10]
+        Charge_State_ref.innerHTML = arr[11]
+        CC_LED_State_ref.innerHTML = arr[12]
+        CC_Load_State_ref.innerHTML = arr[13]
+        Jam_Sequence_ref.innerHTML = arr[14]
+        MCC_SN_ref.innerHTML = arr[15]
+        MCC_RPM_ref.innerHTML = arr[16]
+        MCC_Status_ref.innerHTML = arr[17]
+        MCC_Voltage_ref.innerHTML = arr[18]
+        MCC_Current_ref.innerHTML = arr[19]
+        MCC_Temp_Celsius_ref.innerHTML = arr[20]
+
+
+          // Error Log
+          error_table_ref = document.getElementById('error-table');
+          var new_row = error_table_ref.insertRow();
+          // Cell 0
+          var new_cell = new_row.insertCell(0);
+          var new_text = document.createTextNode('12:00 PM');
+          new_cell.appendChild(new_text);
+
+          // Cell 1
+          new_cell = new_row.insertCell(1);
+          new_text = document.createTextNode('Some err');
+          new_cell.appendChild(new_text);
+
+          // Cell 2
+          new_cell = new_row.insertCell(2);
+          new_text = document.createTextNode('Some errval');
+          new_cell.appendChild(new_text);
+
+
+
+          // NEW ROW
+          // var new_row = status_table_ref.insertRow();
+          // // new row, column one
+          // var new_cell = new_row.insertCell(0);
+          // var new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
+          // // new row, column two
+          // new_cell = new_row.insertCell(1);
+          // new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
+          // // new row, column three
+          // new_cell = new_row.insertCell(2);
+          // new_text = document.createTextNode('New row');
+          // new_cell.appendChild(new_text);
+      });
+    
+
+
+    // Status
+
+    // Voltages
+
+    // Currents
+
+    // Battery
+
+    // CC
+
+    // Jam Sequence
+
+    // MCC
+
+    
+
+
+
+
+
+
+
+      
+
+
+
+    </script>
+
+      
+
+      
+     
+      
+    
+  </body>
+</html>
