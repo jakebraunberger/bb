@@ -1,25 +1,26 @@
 var app = require('express')();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
+var https = require('https');
+var fs = require('fs');
+
 var express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const passport = require('passport');
 
 const session = require('express-session');
-const RedisStore = require('connect-redis')(session);
+
 
 app.use(express.static(__dirname));
-app.use(session({
-	store: new RedisStore({
-		url: config.redisStore.url
-	}),
-	secret: config.redisStore.secret,
-	resave: false,
-	saveUninitialized: false
-}))
-app.use(passport.initialize())
-app.use(passport.session())
 
+var server = https.createServer({
+    key: fs.readFileSync('./server-key.pem'),
+    cert: fs.readFileSync('./server-cert.pem'),
+    ca: fs.readFileSync('./server-csr.pem'),
+    requestCert: false,
+    rejectUnauthorized: false
+},app);
+
+
+var io = require('socket.io')(server);
 
 
 let db = new sqlite3.Database('./display.db');
@@ -84,7 +85,7 @@ const chartArray = [];
 
 sql = `SELECT * from DISPLAY order by id desc limit 1`;
 
-io.on('connection', (socket) => {
+io.sockets.on('connection', (socket) => {
 	
     console.log('go.'); 
     io.emit('go');
@@ -178,6 +179,6 @@ io.on('connection', (socket) => {
 });
 
 
-http.listen(8080, function(){
+server.listen(8080, function(){
 	console.log('listening on *:8080');
 });
